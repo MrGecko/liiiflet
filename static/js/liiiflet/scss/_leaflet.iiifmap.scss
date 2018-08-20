@@ -1,0 +1,67 @@
+.leaflet-iiifmap-toolbar {
+	background-image: url("../images/spritesheet.svg");
+	background-size: 300px 30px !important;
+}
+.leaflet-iiifmap-toolbar-polygon {
+	background-position: -30px 0px !important;
+}
+.leaflet-iiifmap-toolbar-rectangle {
+	background-position: -60px 0px !important;
+}
+.leaflet-iiifmap-toolbar-circle {
+	background-position: -90px 0px !important;
+}
+.erasing-enabled {
+	color: red !important;
+}
+.erasing-disabled {
+	color: inherit !important;
+}
+#facsimile-pagination-control {
+	margin: 0;
+	overflow: scroll;
+	overflow-y: hidden;
+	width: 100%;
+}
+.facsimile-pagination {
+	margin: 0.5em 0 1em 0;
+	min-width: 100%;
+	position: relative;
+	text-align: center;
+	white-space: nowrap;
+	width: max-content;
+	.iiif-thumbnail {
+		display: inline-block;
+		height: 80px;
+		margin: 0 0.5em;
+		position: relative;
+		img {
+			max-height: 100%;
+			max-width: none;
+			width: auto;
+		}
+	}
+	&:first-child {
+		margin-left: 1em;
+	}
+	&:last-child {
+		margin-right: 1em;
+	}
+}
+.leaflet-control-attribution {
+	display: none;
+}
+.leaflet-left.leaflet-bottom {
+	background-color: rgba(5, 5, 5 , 0.3);
+	width: 100%;
+}
+.leaflet-tooltip.facsimileToolTip {
+	min-width: 500px;
+	top: 32px;
+}
+.leaflet-tooltip-left.facsimileToolTip::before {
+	border-left-color: transparent;
+}
+.leaflet-tooltip-right.facsimileToolTip::before {
+	border-right-color: transparent;
+}
