@@ -1,9 +1,11 @@
 import L from 'leaflet';
 
+
 import '../lib/Leaflet.Editable';
 import '../lib/Path.Drag';
 import '../lib/Leaflet.Control.Custom';
 import tileLayerIiif from './leaflet-iiif';
+
 import LeafletIIIFAnnotation from './leaflet-iiif-annotation';
 import IIIFAnnotationLoader from './iiif-annotation-loader';
 
@@ -326,7 +328,7 @@ class LiiifletSrc {
         this.mapControls = [
             new L.NewPolygonControl(),
             new L.NewRectangleControl(),
-            //new L.NewCircleControl(),
+            new L.NewCircleControl(),
             new L.ErasingModeControl(),
             new L.SaveAllControl(),
             new L.ReloadControl()
@@ -479,7 +481,6 @@ class LiiifletSrc {
     onShapeClick(shape) {
         if (this.enable_edition) {
             if (this.erasing) {
-                console.log("must erase");
                 this.editableLayers.removeLayer(shape);
                 this.must_be_saved = true;
             } else {

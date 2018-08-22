@@ -10,7 +10,7 @@ module.exports = {
     entry: './src/liiiflet-src.js',
     output: {
         path: path.resolve(__dirname, '.'),
-        publicPath: 'static/js/liiiflet/',
+        publicPath: '',
         filename: 'dist/liiiflet.js'
     },
     module: {
@@ -22,7 +22,7 @@ module.exports = {
             {
                 test: /\.scss$/,
                 use: [
-                "style-loader", // creates style nodes from JS strings
+                process.env.NODE_ENV !== 'production' ? 'style-loader' : MiniCssExtractPlugin.loader,
                 "css-loader", // translates CSS into CommonJS
                 "sass-loader" // compiles Sass to CSS
                 ]
@@ -42,7 +42,7 @@ module.exports = {
                 loader: 'file-loader',
                 options: {
                     name: '[name].[ext]',
-                    outputPath: '../../images'
+                    outputPath: '../images'
                 }
             }
         ]
@@ -87,7 +87,8 @@ module.exports = {
         new MiniCssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
             // both options are optional
-            filename: "liiiflet.css"
+            filename: "./dist/liiiflet.css",
+            chunkFilename: "[id].css"
         }),
     ]
 };
