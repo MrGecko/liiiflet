@@ -88,7 +88,7 @@ class LiiifletSrc {
             zoom: 0,
             //attributionControl: false,
             zoomControl: false,
-            editable: true
+            editable: this.enable_edition
         });
 
         const manifest_info = this.canvases_data[0].images[0].resource.service['@id'] + '/info.json';
@@ -477,8 +477,9 @@ class LiiifletSrc {
     }
 
     onShapeClick(shape) {
-        if (this.drawMode) {
+        if (this.enable_edition) {
             if (this.erasing) {
+                console.log("must erase");
                 this.editableLayers.removeLayer(shape);
                 this.must_be_saved = true;
             } else {
