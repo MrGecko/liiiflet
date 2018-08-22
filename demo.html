@@ -10,7 +10,7 @@
       <script type="text/javascript" src="./static/js/liiiflet/dist/liiiflet.js"></script>
    </head>
    <body>
-       <div id="liiiflet-map" style="width: 1200px; height:600px; margin: 0 auto;"></div>
+       <div id="liiiflet-map" style="width: 825px; height:720px; margin: 0 auto;"></div>
        <script type="text/javascript">
            const username = "Professeur1";
            const password = "AdeleAdmin2018";
@@ -19,7 +19,7 @@
            const manifest_url = `http://localhost:5000/adele/api/1.0/documents/${doc_id}/manifest`;
            const auth_header = {auth: { username: username, password: password}};
 
-           new Liiiflet("liiiflet-map", {
+           const liiiflet = new Liiiflet("liiiflet-map", {
                loadManifest: function() {
                    return axios.get(manifest_url, null);
                },
@@ -44,6 +44,7 @@
                    //TODO
                }
            },
+           {direction: "center", className: "facsimileToolTip"}, // toolTip Options
            true);
        </script>
    </body>

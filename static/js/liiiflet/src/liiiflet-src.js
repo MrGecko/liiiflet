@@ -11,7 +11,7 @@ import "../scss/main.scss";
 
 class LiiifletSrc {
 
-    constructor(map_id, callbacks, draw_mode = false) {
+    constructor(map_id, callbacks, tooltipOptions, enable_edition = false) {
 
         this.callbacks = callbacks;
 
@@ -19,6 +19,7 @@ class LiiifletSrc {
         this.auth_header = null;
 
         this.must_be_saved = false;
+        this.enable_edition = enable_edition;
 
         if (!this.callbacks.loadManifest) {
             console.log("Liiiflet callbacks are improperly configured");
@@ -33,7 +34,7 @@ class LiiifletSrc {
 
             this.editableLayers = new L.FeatureGroup();
             this.map.addLayer(this.editableLayers);
-            LeafletIIIFAnnotation.initialize(this.map, this.editableLayers);
+            LeafletIIIFAnnotation.initialize(this.map, this.editableLayers, tooltipOptions);
 
             this.map.on('editable:enable', LeafletIIIFAnnotation.showShapes);
             // only save when changes to the geometry occured
@@ -63,9 +64,10 @@ class LiiifletSrc {
             // and display them
             this.toggleDisplayAnnotations();
 
-            if (draw_mode) {
+            if (this.enable_edition) {
                 this.addDrawControls();
             }
+
         });
 
     }
@@ -89,11 +91,10 @@ class LiiifletSrc {
             editable: true
         });
 
-        console.log("map created");
         const manifest_info = this.canvases_data[0].images[0].resource.service['@id'] + '/info.json';
-        this.baseLayer = tileLayerIiif(manifest_info)
-            .addTo(this.map);
-        console.log("baselayer", this.baseLayer );
+        this.baseLayer = tileLayerIiif(manifest_info);
+        this.baseLayer.addTo(this.map);
+
         // build a map of canvas ids and img ids
         this.canvases = [];
         this.images = [];
@@ -347,6 +348,9 @@ class LiiifletSrc {
     }
 
     saveZones(annotations) {
+        if (!this.enable_edition) {
+            return;
+        }
         if (!this.callbacks.saveAnnotations){
             console.log("Liiiflet 'saveAnnotations' callback improperly configured");
             return;
@@ -370,6 +374,9 @@ class LiiifletSrc {
     }
 
     saveAlignments(annotations) {
+        if (!this.enable_edition) {
+            return;
+        }
         if (!this.callbacks.saveAnnotationAlignments){
             console.log("Liiiflet 'saveAnnotationAlignments' callback improperly configured");
             return;

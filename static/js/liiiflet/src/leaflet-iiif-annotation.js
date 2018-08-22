@@ -7,13 +7,14 @@ const LeafletIIIFAnnotation = {
             e.style.opacity = 0;
             e.style.cursor = "pointer";
             e.onmouseover = function () {
-                this.style.opacity = 100;
+                this.style.opacity = 0;
             };
             e.onmouseout = function () {
                 this.style.opacity = 0;
             };
         }
     },
+
     showShapes: function () {
         for (let e of document.getElementsByClassName("leaflet-interactive")) {
             e.style.opacity = 100;
@@ -22,12 +23,25 @@ const LeafletIIIFAnnotation = {
             e.onmouseout = null;
         }
     },
-    initialize: function (leaflet_map, featureGroup) {
+
+    hideShapes: function () {
+        for (let e of document.getElementsByClassName("leaflet-interactive")) {
+            e.style.opacity = 0;
+            e.style.cursor = "pointer";
+            e.onmouseover = null;
+            e.onmouseout = null;
+        }
+    },
+
+    initialize: function (leaflet_map, featureGroup, toolTipOptions) {
 
         this.annotations = [];
         this.annotationTypes = {};
         this.map = leaflet_map;
         this.featureGroup = featureGroup;
+        //const tooltip_max_width = this.map.getSize().x * 0.9;
+        //console.log("tooltip max width:", tooltip_max_width);
+        this.toolTipOptions = toolTipOptions ? toolTipOptions : {direction: "center", className: "facsimileToolTip"};
     },
 
     _makeAnnotation: function (layer) {
@@ -79,8 +93,6 @@ const LeafletIIIFAnnotation = {
          */
         console.log(this.featureGroup.getLayers().length);
 
-        const facsimileToolTipOptions = {direction: "center", className: "facsimileToolTip"};
-
         for (let listId in annotationLists) {
             this.annotationTypes[annotationLists[listId].annotation_type.label] = annotationLists[listId].annotation_type;
             for (let annotation of annotationLists[listId].annotations) {
@@ -108,7 +120,7 @@ const LeafletIIIFAnnotation = {
                 shape.img_id = annotation.img_id;
                 shape.content = annotation.content;
                 if (annotation.content && annotation.content.length > 0) {
-                    shape.bindTooltip(annotation.content, facsimileToolTipOptions);
+                    shape.bindTooltip(annotation.content, this.toolTipOptions);
                 }
                 shape.annotation_type = annotationLists[listId].annotation_type;
                 this.featureGroup.addLayer(shape);
