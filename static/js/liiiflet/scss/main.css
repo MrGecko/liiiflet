@@ -722,28 +722,11 @@
   border-right-color: #fff;
 }
 
-.leaflet-iiifmap-toolbar {
-  background-image: url("../images/spritesheet.svg");
-  background-size: 300px 30px !important;
+.tool-enabled {
+  color: #209cee !important;
 }
 
-.leaflet-iiifmap-toolbar-polygon {
-  background-position: -30px 0px !important;
-}
-
-.leaflet-iiifmap-toolbar-rectangle {
-  background-position: -60px 0px !important;
-}
-
-.leaflet-iiifmap-toolbar-circle {
-  background-position: -90px 0px !important;
-}
-
-.erasing-enabled {
-  color: red !important;
-}
-
-.erasing-disabled {
+.tool-disabled {
   color: inherit !important;
 }
 
@@ -767,11 +750,17 @@
   height: 80px;
   margin: 0 0.5em;
   position: relative;
+  color: white;
 }
 .facsimile-pagination .iiif-thumbnail img {
   max-height: 100%;
   max-width: none;
   width: auto;
+}
+.facsimile-pagination .selected-page {
+  border: 3px white solid;
+  font-weight: bold;
+  font-size: medium;
 }
 .facsimile-pagination:first-child {
   margin-left: 1em;

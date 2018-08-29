@@ -16,12 +16,15 @@ class LiiifletSrc {
     constructor(map_id, callbacks, tooltipOptions, enable_edition = false) {
 
         this.callbacks = callbacks;
-
         this.map_id = map_id;
         this.auth_header = null;
 
         this.must_be_saved = false;
         this.enable_edition = enable_edition;
+        this.erasing = false;
+        this.showing = false;
+
+        this.editableLayers = new L.FeatureGroup();
 
         if (!this.callbacks.loadManifest) {
             console.log("Liiiflet callbacks are improperly configured");
@@ -30,50 +33,12 @@ class LiiifletSrc {
 
         this.callbacks.loadManifest().then((response) => {
             const manifest_data = response.data.data;
-
             this.canvases_data = manifest_data.sequences[0].canvases;
-            this.mapCreate();
-
-            this.editableLayers = new L.FeatureGroup();
-            this.map.addLayer(this.editableLayers);
-            LeafletIIIFAnnotation.initialize(this.map, this.editableLayers, tooltipOptions);
-
-            this.map.on('editable:enable', LeafletIIIFAnnotation.showShapes);
-            // only save when changes to the geometry occured
-            const _this = this;
-            this.map.on('editable:disable', function () {
-                //LeafletIIIFAnnotation.resetMouseOverStyle();
-                /*
-                if (_this.must_be_saved) {
-                    _this.saveAll().then(function () {
-                        console.log("annotations saved.");
-                        _this._must_be_saved = false;
-                    });
-                }
-                */
-            });
-            this.map.on('editable:editing', function () {
-                _this.must_be_saved = true;
-            });
-            this.map.on('editable:created', function (e) {
-                _this.editableLayers.addLayer(e.layer);
-                e.layer.on('click', L.DomEvent.stop).on('click', function () {
-                    _this.onShapeClick(e.layer);
-                });
-            });
-            // Finally load the annotations
-            this.annotationsLoader = IIIFAnnotationLoader.initialize(this.canvases_data, this.callbacks.loadAnnotations);
-            // and display them
-            this.toggleDisplayAnnotations();
-
-            if (this.enable_edition) {
-                this.addDrawControls();
-            }
-
+            //this.annotationsLoader = IIIFAnnotationLoader.initialize(this.canvases_data, this.callbacks.loadAnnotations);
+            this.displayMap(0, tooltipOptions);
         });
 
     }
-
 
     handleAPIErrors(response) {
         const error_str = JSON.stringify(response.errors);
@@ -83,7 +48,7 @@ class LiiifletSrc {
         }
     }
 
-    mapCreate() {
+    mapCreate(canvas_idx, img_idx) {
         this.map = L.map(this.map_id, {
             center: [0, 0],
             crs: L.CRS.Simple,
@@ -92,10 +57,14 @@ class LiiifletSrc {
             zoomControl: false,
             editable: this.enable_edition
         });
+        this.map.doubleClickZoom.disable();
 
-        const manifest_info = this.canvases_data[0].images[0].resource.service['@id'] + '/info.json';
+        const manifest_info = this.canvases_data[canvas_idx].images[img_idx].resource.service['@id'] + '/info.json';
         this.baseLayer = tileLayerIiif(manifest_info);
         this.baseLayer.addTo(this.map);
+
+        this.clearAnnotations(); // clear editableLayers
+        this.map.addLayer(this.editableLayers);
 
         // build a map of canvas ids and img ids
         this.canvases = [];
@@ -104,44 +73,111 @@ class LiiifletSrc {
             this.canvases.push(c["@id"]);
             this.images.push(c.images[0].resource['@id']);
         }
-        console.log(this.canvases);
-        console.log(this.images);
+        //console.log(this.canvases);
+        //console.log(this.images);
+
+        const _this = this;
+        this.map.on('editable:editing', function () {
+                _this.must_be_saved = true;
+        });
+        this.map.on('editable:created', function (e) {
+            _this.editableLayers.addLayer(e.layer);
+            _this.must_be_saved = true;
+            e.layer.on('click', L.DomEvent.stop).on('click', function () {
+                _this.onShapeClick(e.layer);
+            });
+        });
+
+        this.map.on('editable:drawing:commit', function (e) {
+            for (let d of document.getElementsByClassName('drawing-tools-bar')) {
+                console.log(d);
+                for (let e of d.getElementsByTagName('a')){
+                     console.log(e);
+                    e.classList.remove('tool-enabled');
+                    e.classList.add('tool-disabled');
+                }
+            }
+        });
 
         if (this.canvases.length > 1) {
             this.addPaginationControls();
         }
+
+        if (this.enable_edition) {
+            this.addDrawControls();
+        }
+    }
+
+    displayMap(canvas_idx, tooltipOptions) {
+
+        this.current_canvas_idx = canvas_idx;
+        this.current_img_idx = 0;
+
+        if (!this.map) {
+            this.mapCreate(this.current_canvas_idx, this.current_img_idx);
+        } else {
+            const manifest_info = this.canvases_data[canvas_idx].images[this.current_img_idx].resource.service['@id'] + '/info.json';
+            this.map.removeLayer(this.baseLayer);
+            this.baseLayer = tileLayerIiif(manifest_info);
+            this.baseLayer.addTo(this.map);
+            this.editableLayers = new L.FeatureGroup();
+            this.map.addLayer(this.editableLayers);
+        }
+
+        this.annotationsLoader = IIIFAnnotationLoader.initialize(this.canvases_data[this.current_canvas_idx], this.callbacks.loadAnnotations);
+
+        LeafletIIIFAnnotation.initialize(this.map, this.editableLayers, tooltipOptions);
+
+        return this.setDisplayMode();
     }
 
     addPaginationControls() {
 
         let thumbnails = '';
+        let num_page = 1;
         for (let img_id of this.images) {
             const thumbnail_url = img_id.replace("full/full", "full/,80");
-            thumbnails += '<div class="iiif-thumbnail"><img src="' + thumbnail_url + '"/></div>';
+            thumbnails += '<div class="iiif-thumbnail '+ (this.current_canvas_idx+1 === num_page ? 'selected-page' : '') +'">';
+            thumbnails += '<img src="' + thumbnail_url + '"/><div>'+ num_page +'</div>';
+            thumbnails += '<input type="hidden" value="' + (num_page - 1) + '"/></div>';
+            num_page += 1;
+        }
+
+        const _this = this;
+        function goToPage(data) {
+            if (data.target.tagName === "IMG") {
+                const thumbnail = data.target.parentNode;
+                const num_page = parseInt(thumbnail.getElementsByTagName('input')[0].value);
+                // display the clicked page
+                _this.displayMap(num_page);
+                // select the clicked thumbnail
+                for (let t of document.getElementsByClassName("iiif-thumbnail")){
+                    t.classList.remove('selected-page');
+                }
+                thumbnail.classList.add('selected-page');
+            }
         }
 
         L.control.custom({
             id: 'facsimile-pagination-control',
             position: 'bottomleft',
-            content: '<div class="facsimile-pagination">' +
-                thumbnails +
-                '</div>',
+            content: '<div class="facsimile-pagination">' +  thumbnails + '</div>',
             classes: '',
             style:
                 {
                     padding: '0px 0 0 0',
                     cursor: 'pointer',
                 },
+            /*
             datas:
                 {
                     'foo': 'bar',
                 },
+            */
             events:
                 {
-                    click: function (data) {
-                        console.log('wrapper div element clicked');
-                        console.log(data);
-                    },
+                    click: data => goToPage(data),
+                    /*
                     dblclick: function (data) {
                         console.log('wrapper div element dblclicked');
                         console.log(data);
@@ -150,74 +186,75 @@ class LiiifletSrc {
                         console.log('wrapper div element contextmenu');
                         console.log(data);
                     },
+                    */
                 }
         }).addTo(this.map);
     }
 
     createDrawControls() {
-
-        const drawingToolsContainer = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
-        const workflowToolsContainer = L.DomUtil.create('div', 'leaflet-control leaflet-bar');
+        console.log("create draw controls");
+        const drawingToolsContainer = L.DomUtil.create('div', 'leaflet-control leaflet-bar drawing-tools-bar');
+        const workflowToolsContainer = L.DomUtil.create('div', 'leaflet-control leaflet-bar workflow-tools-bar');
         const _this = this;
         L.DomEvent.disableClickPropagation(drawingToolsContainer);
         L.DomEvent.disableClickPropagation(workflowToolsContainer);
 
-        L.EditControl = L.Control.extend({
+        const _showShapes = func => function(latlng, options) {
+            LiiifletSrc.enableShowingMode();
+            func.bind(this.map.editTools)(latlng, options);
+        };
 
+        L.EditControl = L.Control.extend({
             options: {
                 position: 'topright',
                 callback: null,
                 kind: '',
                 title: '',
-                html: '',
                 classes: '',
             },
-
             onAdd: function (map) {
-                let link = L.DomUtil.create('a', '', drawingToolsContainer);
+                let link = L.DomUtil.create('a', '', drawingToolsContainer),
+                    svg = L.DomUtil.create('a', '', link);
 
                 link.href = '#';
                 link.title = this.options.title;
-                link.innerHTML = this.options.html;
+
+                L.DomUtil.addClass(svg, 'fas fa-save fa-lg');
                 for (let c of this.options.classes) {
-                    L.DomUtil.addClass(link, c);
+                    L.DomUtil.addClass(svg, c);
                 }
+
                 L.DomEvent.on(link, 'click', L.DomEvent.stop)
                     .on(link, 'click', function () {
-                        if (!_this.erasing) {
-                            window.LAYER = this.options.callback.call(map.editTools);
-                        }
+                        _this.erasing = false;
+                        window.LAYER = this.options.callback.call(map.editTools);
+                        console.log("click");
+                        L.DomUtil.addClass(link, 'tool-enabled');
+                        L.DomUtil.removeClass(link, 'tool-disabled');
                     }, this);
-
                 return drawingToolsContainer;
             }
-
         });
-
-        const showShapes = func => function(latlng, options) {
-            LeafletIIIFAnnotation.showShapes();
-            func.bind(this.map.editTools)(latlng, options);
-        };
 
         L.NewPolygonControl = L.EditControl.extend({
             options: {
-                callback: showShapes(this.map.editTools.startPolygon),
+                callback: _showShapes(this.map.editTools.startPolygon),
                 title: 'Ajouter un polygone',
-                classes: ['leaflet-iiifmap-toolbar', 'leaflet-iiifmap-toolbar-polygon']
+                classes: ['leaflet-iiifmap-toolbar', 'leaflet-iiifmap-toolbar-polygon', 'fas', 'fa-draw-polygon']
             }
         });
         L.NewRectangleControl = L.EditControl.extend({
             options: {
-                callback: showShapes(this.map.editTools.startRectangle),
+                callback: _showShapes(this.map.editTools.startRectangle),
                 title: 'Ajouter un rectangle',
-                classes: ['leaflet-iiifmap-toolbar', 'leaflet-iiifmap-toolbar-rectangle']
+                classes: ['leaflet-iiifmap-toolbar', 'leaflet-iiifmap-toolbar-rectangle', 'fas', 'fa-square-full']
             }
         });
         L.NewCircleControl = L.EditControl.extend({
             options: {
-                callback: showShapes(this.map.editTools.startCircle),
+                callback: _showShapes(this.map.editTools.startCircle),
                 title: 'Ajouter un cercle',
-                classes: ['leaflet-iiifmap-toolbar', 'leaflet-iiifmap-toolbar-circle']
+                classes: ['leaflet-iiifmap-toolbar', 'leaflet-iiifmap-toolbar-circle', 'fas', 'fa-circle']
             }
         });
 
@@ -237,7 +274,7 @@ class LiiifletSrc {
                 L.DomEvent.on(link, 'click', L.DomEvent.stop)
                     .on(link, 'click', function () {
                         // save annotations (if any change occured) then hide zones
-                        _this.disableErasingMode();
+                        //_this.disableErasingMode();
                         if (_this.must_be_saved) {
                             _this.saveAll().then(function () {
                                 _this.editableLayers.eachLayer(function (l) {
@@ -250,7 +287,7 @@ class LiiifletSrc {
                                 l.disableEdit();
                             });
                         }
-                        LeafletIIIFAnnotation.resetMouseOverStyle();
+                        //LeafletIIIFAnnotation.hideShapes();
                     }, this);
 
                 return workflowToolsContainer;
@@ -264,31 +301,30 @@ class LiiifletSrc {
 
                 link.href = '#';
                 link.title = 'Supprimer une zone';
-                L.DomUtil.addClass(link, 'erasing-disabled');
+                L.DomUtil.addClass(link, 'tool-disabled');
                 L.DomUtil.addClass(svg, 'fas fa-eraser fa-lg workflow-tool');
 
-                _this.disableErasingMode = function () {
+                LiiifletSrc.disableErasingMode = function () {
                     _this.erasing = false;
-                    L.DomUtil.addClass(link, 'erasing-disabled');
-                    L.DomUtil.removeClass(link, 'erasing-enabled');
-                    LeafletIIIFAnnotation.resetMouseOverStyle();
+                    L.DomUtil.addClass(link, 'tool-disabled');
+                    L.DomUtil.removeClass(link, 'tool-enabled');
                 };
-                _this.enableErasingMode = function () {
+                LiiifletSrc.enableErasingMode = function () {
                     _this.erasing = true;
                     _this.editableLayers.eachLayer((l) => {
                         l.disableEdit();
                     });
-                    LeafletIIIFAnnotation.showShapes();
-                    L.DomUtil.removeClass(link, 'erasing-disabled');
-                    L.DomUtil.addClass(link, 'erasing-enabled');
+                    LiiifletSrc.enableShowingMode();
+                    L.DomUtil.removeClass(link, 'tool-disabled');
+                    L.DomUtil.addClass(link, 'tool-enabled');
                 };
                 _this.toggleErasingMode = function () {
                     _this.erasing = !_this.erasing;
                     if (_this.erasing) {
-                        _this.enableErasingMode();
+                        LiiifletSrc.enableErasingMode();
                     }
                     else {
-                        _this.disableErasingMode();
+                        LiiifletSrc.disableErasingMode();
                     }
                 };
 
@@ -313,7 +349,7 @@ class LiiifletSrc {
                     .on(link, 'dbclick', L.DomEvent.stop)
                     .on(link, 'click', function () {
                         console.log("reload annotations");
-                        _this.disableErasingMode();
+                        LiiifletSrc.disableErasingMode();
                         _this.clearAnnotations();
                         _this.annotationsLoader = IIIFAnnotationLoader.initialize(_this.canvases_data, _this.callbacks.loadAnnotations);
                         LeafletIIIFAnnotation.initialize(_this.map, _this.editableLayers);
@@ -325,13 +361,54 @@ class LiiifletSrc {
             }
         });
 
+        L.ShowingModeControl = L.Control.extend({
+            onAdd: function (map) {
+                let link = L.DomUtil.create('a', '', workflowToolsContainer),
+                    svg = L.DomUtil.create('a', '', link);
+
+                link.href = '#';
+                link.title = 'Éditer les zones';
+                LiiifletSrc.enableShowingMode = function() {
+                    _this.showing = true;
+                    LiiifletSrc.showShapes();
+                    L.DomUtil.addClass(link, 'tool-enabled');
+                    L.DomUtil.removeClass(link, 'tool-disabled');
+                };
+
+                LiiifletSrc.disableShowingMode = function() {
+                    LiiifletSrc.disableErasingMode();
+                    _this.showing = false;
+                    _this.hideShapes();
+                    L.DomUtil.addClass(link, 'tool-disabled');
+                    L.DomUtil.removeClass(link, 'tool-enabled');
+                };
+
+                _this.toggleShowingMode = function () {
+                    _this.showing = !_this.showing;
+                    if (_this.showing) {
+                        LiiifletSrc.enableShowingMode();
+                    }
+                    else {
+                        LiiifletSrc.disableShowingMode();
+                    }
+                };
+
+                L.DomUtil.addClass(svg, 'fas fa-eye fa-lg workflow-tool');
+                L.DomEvent.on(link, 'click', L.DomEvent.stop)
+                    .on(link, 'click', _this.toggleShowingMode, this);
+
+                return workflowToolsContainer;
+            }
+        });
+
         this.mapControls = [
+            new L.ShowingModeControl(),
             new L.NewPolygonControl(),
             new L.NewRectangleControl(),
             new L.NewCircleControl(),
             new L.ErasingModeControl(),
             new L.SaveAllControl(),
-            new L.ReloadControl()
+            new L.ReloadControl(),
         ];
     }
 
@@ -360,9 +437,9 @@ class LiiifletSrc {
 
         const new_annotations = [];
         for (let anno of annotations) {
-            //console.log(anno);
-            //console.log(this.images);
-            //console.log(this.canvases);
+            console.log(anno);
+            console.log(this.images);
+            console.log(this.canvases);
             const newAnnotation = {
                 img_idx: this.images.indexOf(anno.img_id),
                 canvas_idx: this.canvases.indexOf(anno.canvas_id),
@@ -421,11 +498,11 @@ class LiiifletSrc {
     */
 
     getCurrentCanevasId() {
-        return this.canvases[0]; // TODO
+        return this.canvases[this.current_canvas_idx];
     }
 
     getCurrentImageId() {
-        return this.images[0]; // TODO
+        return this.images[this.current_img_idx];
     }
 
     saveAll() {
@@ -451,7 +528,7 @@ class LiiifletSrc {
     setAnnotations() {
         console.log("set annotations");
         const _this = this;
-        this.annotationsLoader.then(function () {
+        return this.annotationsLoader.then(function () {
             LeafletIIIFAnnotation.setAnnotations(IIIFAnnotationLoader.annotationLists);
             /*
             *  Bind actions on shape clicks
@@ -462,19 +539,24 @@ class LiiifletSrc {
                 });
             });
             _this.must_be_saved = false;
+
+            LiiifletSrc.disableShowingMode();
         });
     }
 
     clearAnnotations() {
         console.log("clear annotations");
-        this.editableLayers.clearLayers();
+        const _this = this;
+        return new Promise(function(resolve, reject) {
+           resolve(_this.editableLayers.clearLayers());
+        });
     }
 
-    toggleDisplayAnnotations() {
+    setDisplayMode() {
         if (this.displayAnnotationsMode) {
-            this.setAnnotations();
+            return this.setAnnotations();
         } else {
-            this.clearAnnotations();
+            return this.clearAnnotations();
         }
     }
 
@@ -484,7 +566,9 @@ class LiiifletSrc {
                 this.editableLayers.removeLayer(shape);
                 this.must_be_saved = true;
             } else {
-                shape.toggleEdit();
+                if (this.showing) {
+                    shape.toggleEdit();
+                }
             }
         }
     }
@@ -497,6 +581,31 @@ class LiiifletSrc {
         }
     }
 
+    hideShapes () {
+        for (let e of document.getElementsByClassName("leaflet-interactive")) {
+            e.style.opacity = 0;
+            e.style.cursor = "pointer";
+            e.onmouseover = function () {
+                this.style.opacity = 0;
+            };
+            e.onmouseout = function () {
+                this.style.opacity = 0;
+            };
+        }
+
+        this.editableLayers.eachLayer(function (l) {
+            l.disableEdit();
+        });
+    }
+
+    static showShapes() {
+        for (let e of document.getElementsByClassName("leaflet-interactive")) {
+            e.style.opacity = 100;
+            e.style.cursor = "pointer";
+            e.onmouseover = null;
+            e.onmouseout = null;
+        }
+    }
 
 }
 

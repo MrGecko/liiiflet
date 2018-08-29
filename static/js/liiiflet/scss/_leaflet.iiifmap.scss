@@ -1,22 +1,11 @@
-.leaflet-iiifmap-toolbar {
-	background-image: url("../images/spritesheet.svg");
-	background-size: 300px 30px !important;
+
+.tool-enabled {
+	color: hsl(204, 86%, 53%) !important;
 }
-.leaflet-iiifmap-toolbar-polygon {
-	background-position: -30px 0px !important;
-}
-.leaflet-iiifmap-toolbar-rectangle {
-	background-position: -60px 0px !important;
-}
-.leaflet-iiifmap-toolbar-circle {
-	background-position: -90px 0px !important;
-}
-.erasing-enabled {
-	color: red !important;
-}
-.erasing-disabled {
+.tool-disabled {
 	color: inherit !important;
 }
+
 #facsimile-pagination-control {
 	margin: 0;
 	overflow: scroll;
@@ -40,7 +29,13 @@
 			max-width: none;
 			width: auto;
 		}
+		color: white;
 	}
+    .selected-page {
+      border: 3px white solid;
+      font-weight: bold;
+      font-size: medium;
+    }
 	&:first-child {
 		margin-left: 1em;
 	}

@@ -2,37 +2,6 @@ const LeafletIIIFAnnotation = {
 
     ZOOM: 2,
 
-    resetMouseOverStyle: function () {
-        for (let e of document.getElementsByClassName("leaflet-interactive")) {
-            e.style.opacity = 0;
-            e.style.cursor = "pointer";
-            e.onmouseover = function () {
-                this.style.opacity = 0;
-            };
-            e.onmouseout = function () {
-                this.style.opacity = 0;
-            };
-        }
-    },
-
-    showShapes: function () {
-        for (let e of document.getElementsByClassName("leaflet-interactive")) {
-            e.style.opacity = 100;
-            e.style.cursor = "pointer";
-            e.onmouseover = null;
-            e.onmouseout = null;
-        }
-    },
-
-    hideShapes: function () {
-        for (let e of document.getElementsByClassName("leaflet-interactive")) {
-            e.style.opacity = 0;
-            e.style.cursor = "pointer";
-            e.onmouseover = null;
-            e.onmouseout = null;
-        }
-    },
-
     initialize: function (leaflet_map, featureGroup, toolTipOptions) {
 
         this.annotations = [];
@@ -129,7 +98,7 @@ const LeafletIIIFAnnotation = {
             }
         }
         console.log(this.featureGroup.getLayers().length);
-        this.resetMouseOverStyle();
+        //this.hideShapes();
     }
 };
 

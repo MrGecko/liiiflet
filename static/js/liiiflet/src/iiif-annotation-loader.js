@@ -21,13 +21,11 @@ import axios from 'axios';
 const IIIFAnnotationLoader = {
     options: {},
 
-    initialize: function (canvases, annotations_loader) {
-        this.canvases = canvases;
+    initialize: function (canvas, annotations_loader) {
         //this.options = Object.assign(this.options, options);
-        this.annotationLists = [];
+        this.annotationLists = {};
         this.annotations_loader = annotations_loader;
 
-        let canvas = this._getFirstCanvas();
         // get annotation lists urls
         let axiosPromises = [];
         if (canvas.otherContent) {
@@ -41,10 +39,6 @@ const IIIFAnnotationLoader = {
             }
         }
         return axios.all(axiosPromises);
-    },
-    _getFirstCanvas: function () {
-        //TODO: gérer erreurs
-        return this.canvases[0];
     },
 
     _getSelectorRegion: function (selector, selector_type) {
@@ -162,9 +156,9 @@ const IIIFAnnotationLoader = {
     loadAnnotationList: function (list_url) {
         console.log("Adding list " + list_url);
         this.annotationLists[list_url] = {annotation_type: undefined, annotations: []};
+        let _this = this;
         return this.annotations_loader(list_url)
             .then(response => {
-
                 for(const m of response.data.metadata) {
                     if (m["annotation_type"]) {
                         this.annotationLists[list_url].annotation_type = m["annotation_type"];
@@ -174,7 +168,7 @@ const IIIFAnnotationLoader = {
                 if(!this.annotationLists[list_url].annotation_type){
                     throw new Error("Annotation type metadata is empty for annotation list " + list_url);
                 }
-                console.log(response.data);
+
                 if (response.data.resources){
                     for (let annotation of response.data.resources) {
                         let new_annotation = this.parseAnnotation(annotation);
