@@ -5,7 +5,7 @@
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
       <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1, user-scalable=no">
       <meta name="robots" content="noindex, nofollow">
-      <script defer src="https://use.fontawesome.com/releases/v5.1.0/js/all.js"></script>
+      <script defer src="https://use.fontawesome.com/releases/v5.2.0/js/all.js"></script>
       <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
       <script type="text/javascript" src="./static/js/liiiflet/dist/liiiflet.js"></script>
       <link rel="stylesheet" href="./static/js/liiiflet/dist/liiiflet.css"/>
@@ -15,31 +15,42 @@
        <script type="text/javascript">
            const username = "Professeur1";
            const password = "AdeleAdmin2018";
-           const doc_id = 20;
-           const user_id = 4;
+           const doc_id = 110;
+
            const manifest_url = `http://localhost:5000/adele/api/1.0/documents/${doc_id}/manifest`;
            const auth_header = {auth: { username: username, password: password}};
 
            const liiiflet = new Liiiflet("liiiflet-map", {
                loadManifest: function() {
-                   return axios.get(manifest_url, null);
+                   return axios.get(manifest_url, null).then(response => {
+                       // unbox the JSONAPI format
+                       return new Promise(resolve => resolve(response.data));}
+                   );
                },
                loadAnnotations: function(annotation_list_url) {
-                   return axios.get(annotation_list_url, null);
-               } ,
+                   return axios.get(annotation_list_url, null).then(response => {
+                       // unbox the JSONAPI format
+                       return new Promise(resolve => resolve(response.data));}
+                   );
+               },
+               loadDefaultAnnotationType: function() {
+                   return axios.get(`http://localhost:5000/adele/api/1.0/annotation-types`, null).then((response) => {
+                       // unbox the JSONAPI format & find the "annotation" type
+                       // (== not the transcription zone type but the free annotations)
+                       for (let a of response.data.data) {
+                           if (a.label === "annotation") {
+                               return new Promise(resolve => resolve(a));
+                           }
+                       }
+                       return new Promise(resolve => resolve(response.data[0]));
+                   });
+               },
                saveAnnotations: function(annotations) {
-                   return axios.delete(
-                       `http://localhost:5000/adele/api/1.0/documents/${doc_id}/annotations/from-user/${user_id}`,
-                       auth_header
-                   ).then((response) => {
-                      console.log("delete response:", response);
-                      //this.handleAPIErrors(response, doc_id);
-                      return axios.post(
+                   return axios.post(
                           `http://localhost:5000/adele/api/1.0/documents/${doc_id}/annotations`,
                           {"data": annotations},
                           auth_header
                       );
-                   });
                },
                saveAnnotationAlignments: function(annotations) {
                    //TODO

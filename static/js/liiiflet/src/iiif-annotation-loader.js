@@ -159,7 +159,7 @@ const IIIFAnnotationLoader = {
         let _this = this;
         return this.annotations_loader(list_url)
             .then(response => {
-                for(const m of response.data.metadata) {
+                for(const m of response.metadata) {
                     if (m["annotation_type"]) {
                         this.annotationLists[list_url].annotation_type = m["annotation_type"];
                     }
@@ -169,8 +169,8 @@ const IIIFAnnotationLoader = {
                     throw new Error("Annotation type metadata is empty for annotation list " + list_url);
                 }
 
-                if (response.data.resources){
-                    for (let annotation of response.data.resources) {
+                if (response.resources){
+                    for (let annotation of response.resources) {
                         let new_annotation = this.parseAnnotation(annotation);
                         if (new_annotation) {
                             this.annotationLists[list_url].annotations.push(new_annotation);

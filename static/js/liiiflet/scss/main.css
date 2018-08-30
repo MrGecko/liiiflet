@@ -722,6 +722,11 @@
   border-right-color: #fff;
 }
 
+.leaflet-iiifmap-toolbar {
+  position: relative;
+  left: 1px;
+}
+
 .tool-enabled {
   color: #209cee !important;
 }

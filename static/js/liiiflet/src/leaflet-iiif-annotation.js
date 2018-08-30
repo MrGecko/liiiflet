@@ -2,8 +2,8 @@ const LeafletIIIFAnnotation = {
 
     ZOOM: 2,
 
-    initialize: function (leaflet_map, featureGroup, toolTipOptions) {
-
+    initialize: function (leaflet_map, featureGroup, defaultZoneType, toolTipOptions) {
+        this.default_zone_type = defaultZoneType;
         this.annotations = [];
         this.annotationTypes = {};
         this.map = leaflet_map;
@@ -21,19 +21,29 @@ const LeafletIIIFAnnotation = {
             coords = [center.x, center.y, layer.getRadius() * 4]
         } else {
             for (let c of layer.toGeoJSON().geometry.coordinates) {
+                if (!c) {
+                    return null;
+                }
                 for (let i = 0; i < c.length; i++) {
                     const point = this.map.project([c[i][1], c[i][0]], LeafletIIIFAnnotation.ZOOM);
-                    coords.push(point.x + "," + point.y);
+                    coords.push( point.x + "," + point.y);
                 }
             }
         }
 
+        coords = coords.join(',');
+
+        //check if it's a point
+        if (new Set(coords.split(",")).size === 1) {
+            return null;
+        }
+
         if (!layer.annotation_type) {
-            layer.annotation_type = this.annotationTypes["transcription"];
+            layer.annotation_type = this.annotationTypes[this.default_zone_type.label]; //TODO: sortir cette valeur par défaut
         }
 
         return  {
-            region: {coords: coords.join(',')},
+            region: {coords: coords},
             content: layer.content,
             annotation_type: layer.annotation_type,
             canvas_id : layer.canvas_id,
@@ -45,12 +55,15 @@ const LeafletIIIFAnnotation = {
         this.annotations = [];
         const _this = this;
         this.featureGroup.eachLayer(function (layer) {
-            console.log("make anno");
             if (!layer.canvas_id)
                 layer.canvas_id = canevas_id;
             if (!layer.img_id)
                 layer.img_id = img_id;
-            _this.annotations.push(_this._makeAnnotation(layer))
+            const new_anno = _this._makeAnnotation(layer);
+            console.log("new anno", new_anno);
+            if (new_anno){
+            _this.annotations.push(new_anno);
+            }
         });
         return this.annotations
     },
