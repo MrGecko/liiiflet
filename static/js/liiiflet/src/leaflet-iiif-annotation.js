@@ -60,7 +60,7 @@ const LeafletIIIFAnnotation = {
             if (!layer.img_id)
                 layer.img_id = img_id;
             const new_anno = _this._makeAnnotation(layer);
-            console.log("new anno", new_anno);
+            //console.log("new anno", new_anno);
             if (new_anno){
             _this.annotations.push(new_anno);
             }

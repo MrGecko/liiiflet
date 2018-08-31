@@ -22,14 +22,13 @@
 
            const liiiflet = new Liiiflet("liiiflet-map", {
                loadManifest: function() {
-                   return axios.get(manifest_url, null).then(response => {
+                   return axios.get(manifest_url, auth_header).then(response => {
                        // unbox the JSONAPI format
-                       return new Promise(resolve => resolve(response.data));}
+                       return new Promise(resolve => resolve(response.data.data));}
                    );
                },
                loadAnnotations: function(annotation_list_url) {
-                   return axios.get(annotation_list_url, null).then(response => {
-                       // unbox the JSONAPI format
+                   return axios.get(annotation_list_url, auth_header).then(response => {
                        return new Promise(resolve => resolve(response.data));}
                    );
                },

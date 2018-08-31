@@ -38,10 +38,15 @@ class LiiifletSrc {
             this.default_zone_type = response;
             // async load of the manifest & map creation
             this.callbacks.loadManifest().then((response) => {
-                const manifest_data = response.data;
-                this.canvases_data = manifest_data.sequences[0].canvases;
+                this.canvases_data = response.sequences[0].canvases;
                 this.displayMap(0);
-                LiiifletSrc.disableShowingMode();
+
+                if (this.enable_edition){
+                    LiiifletSrc.disableShowingMode();
+                } else {
+                    this.showing = false;
+                    this.hideShapes();
+                }
             });
         });
 
@@ -102,7 +107,6 @@ class LiiifletSrc {
         if (this.canvases.length > 1) {
             this.addPaginationControls();
         }
-
         if (this.enable_edition) {
             this.addDrawControls();
         }
@@ -158,8 +162,10 @@ class LiiifletSrc {
                 }
                 thumbnail.classList.add('selected-page');
 
-                LiiifletSrc.disableErasingMode();
-                LiiifletSrc.unselectDrawingTools();
+                if (_this.enable_edition) {
+                    LiiifletSrc.disableErasingMode();
+                    LiiifletSrc.unselectDrawingTools();
+                }
             }
         }
 
@@ -575,7 +581,12 @@ class LiiifletSrc {
             _this.must_be_saved = false;
 
             if (!_this.showing) {
-                LiiifletSrc.disableShowingMode();
+                if (_this.enable_edition) {
+                    LiiifletSrc.disableShowingMode();
+                } else {
+                    _this.showing = false;
+                    _this.hideShapes();
+                }
             }
         });
     }
