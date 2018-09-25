@@ -38,16 +38,28 @@ class LiiifletSrc {
             this.default_zone_type = response;
             // async load of the manifest & map creation
             this.callbacks.loadManifest().then((response) => {
-                this.canvases_data = response.sequences[0].canvases;
-                this.displayMap(0);
+                if(response && response.sequences && response.sequences.length >= 1) {
+                    this.canvases_data = response.sequences[0].canvases;
+                    this.displayMap(0);
 
-                if (this.enable_edition){
-                    LiiifletSrc.disableShowingMode();
+                    if (this.enable_edition){
+                        LiiifletSrc.disableShowingMode();
+                    } else {
+                        this.showing = false;
+                        this.hideShapes();
+                    }
                 } else {
-                    this.showing = false;
-                    this.hideShapes();
+                    console.log("Error1 loading manifest:");
+                    console.log("Response: ", response);
                 }
+
+            }).catch((response) => {
+                console.log("Error2 loading manifest:");
+                console.log("Response: ", response);
             });
+        }).catch((response) => {
+            console.log("Error3 loading manifest:");
+            console.log("Response: ", response);
         });
 
     }

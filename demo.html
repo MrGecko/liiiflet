@@ -15,7 +15,7 @@
        <script type="text/javascript">
            const username = "Professeur1";
            const password = "AdeleAdmin2018";
-           const doc_id = 110;
+           const doc_id = 1210;
 
            const manifest_url = `http://localhost:5000/adele/api/1.0/documents/${doc_id}/manifest`;
            const auth_header = {auth: { username: username, password: password}};
@@ -24,8 +24,8 @@
                loadManifest: function() {
                    return axios.get(manifest_url, auth_header).then(response => {
                        // unbox the JSONAPI format
-                       return new Promise(resolve => resolve(response.data.data));}
-                   );
+                       return new Promise(resolve => resolve(response.data.data));
+                   });
                },
                loadAnnotations: function(annotation_list_url) {
                    return axios.get(annotation_list_url, auth_header).then(response => {
