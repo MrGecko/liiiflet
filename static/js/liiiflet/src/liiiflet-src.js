@@ -65,10 +65,12 @@ class LiiifletSrc {
     }
 
     handleAPIErrors(response) {
-        const error_str = JSON.stringify(response.errors);
-        if (response.errors) {
-            this.error = error_str;
-            throw new Error(error_str);
+        if (response && response.errors) {
+            const error_str = JSON.stringify(response.errors);
+            if (response.errors) {
+                this.error = error_str;
+                throw new Error(error_str);
+            }
         }
     }
 

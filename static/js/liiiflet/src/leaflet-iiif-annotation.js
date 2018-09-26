@@ -52,6 +52,9 @@ const LeafletIIIFAnnotation = {
     },
 
     getAnnotations: function (canevas_id, img_id) {
+        /*
+        *   Get annotations from the leaflet shapes
+        * */
         this.annotations = [];
         const _this = this;
         this.featureGroup.eachLayer(function (layer) {
@@ -74,7 +77,8 @@ const LeafletIIIFAnnotation = {
             let's draw the regions
          */
         console.log(this.featureGroup.getLayers().length);
-
+        console.log(annotationLists);
+        console.log(this.annotationTypes);
         for (let listId in annotationLists) {
             this.annotationTypes[annotationLists[listId].annotation_type.label] = annotationLists[listId].annotation_type;
             for (let annotation of annotationLists[listId].annotations) {
