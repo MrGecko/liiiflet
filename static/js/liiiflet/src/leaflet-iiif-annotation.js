@@ -80,39 +80,42 @@ const LeafletIIIFAnnotation = {
         console.log(annotationLists);
         console.log(this.annotationTypes);
         for (let listId in annotationLists) {
-            this.annotationTypes[annotationLists[listId].annotation_type.label] = annotationLists[listId].annotation_type;
-            for (let annotation of annotationLists[listId].annotations) {
+            if (annotationLists[listId].annotations.length > 0) {
+                this.annotationTypes[annotationLists[listId].annotation_type.label] = annotationLists[listId].annotation_type;
+                for (let annotation of annotationLists[listId].annotations) {
 
-                let c = annotation.region.coords.split(',');
-                let shape = null;
-                switch (annotation.region.type) {
-                    case "rect":
-                        shape = L.rectangle([this.map.unproject([c[0], c[1]], LeafletIIIFAnnotation.ZOOM), this.map.unproject([c[2], c[3]], 2)]);
-                        break;
-                    case "polygon":
-                        let pointList = [];
-                        for (let i = 0; i < c.length; i += 2) {
-                            pointList.push(this.map.unproject([c[i], c[i + 1]], LeafletIIIFAnnotation.ZOOM));
-                        }
-                        shape = L.polygon(pointList);
-                        break;
-                    case "circle":
-                        shape = L.circle(this.map.unproject([c[0], c[1]], LeafletIIIFAnnotation.ZOOM), {radius: c[2] * 0.25});
-                        break;
+                    let c = annotation.region.coords.split(',');
+                    let shape = null;
+                    switch (annotation.region.type) {
+                        case "rect":
+                            shape = L.rectangle([this.map.unproject([c[0], c[1]], LeafletIIIFAnnotation.ZOOM), this.map.unproject([c[2], c[3]], 2)]);
+                            break;
+                        case "polygon":
+                            let pointList = [];
+                            for (let i = 0; i < c.length; i += 2) {
+                                pointList.push(this.map.unproject([c[i], c[i + 1]], LeafletIIIFAnnotation.ZOOM));
+                            }
+                            shape = L.polygon(pointList);
+                            break;
+                        case "circle":
+                            shape = L.circle(this.map.unproject([c[0], c[1]], LeafletIIIFAnnotation.ZOOM), {radius: c[2] * 0.25});
+                            break;
+                    }
+
+                    //add the shape & the content to the map
+                    shape.canvas_id = annotation.canvas_id;
+                    shape.img_id = annotation.img_id;
+                    shape.content = annotation.content;
+                    if (annotation.content && annotation.content.length > 0) {
+                        shape.bindTooltip(annotation.content, this.toolTipOptions);
+                    }
+                    shape.annotation_type = annotationLists[listId].annotation_type;
+                    this.featureGroup.addLayer(shape);
+
+                    shape.addTo(this.map);
                 }
-
-                //add the shape & the content to the map
-                shape.canvas_id = annotation.canvas_id;
-                shape.img_id = annotation.img_id;
-                shape.content = annotation.content;
-                if (annotation.content && annotation.content.length > 0) {
-                    shape.bindTooltip(annotation.content, this.toolTipOptions);
-                }
-                shape.annotation_type = annotationLists[listId].annotation_type;
-                this.featureGroup.addLayer(shape);
-
-                shape.addTo(this.map);
             }
+
         }
         console.log(this.featureGroup.getLayers().length);
         //this.hideShapes();

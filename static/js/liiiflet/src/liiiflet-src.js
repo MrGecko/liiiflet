@@ -488,8 +488,9 @@ class LiiifletSrc {
 
         const new_annotations = [];
         for (let anno of annotations) {
-            /*
+
             console.log(anno);
+            /*
             console.log(this.images);
             console.log(this.canvases);
             */
@@ -498,7 +499,7 @@ class LiiifletSrc {
                 canvas_idx: this.current_canvas_idx,//this.canvases.indexOf(anno.canvas_id),
                 coords: anno.region.coords,
                 content: anno.content ? anno.content : "",
-                zone_type_id: anno.annotation_type.id
+                zone_type_id:  anno.annotation_type ? anno.annotation_type.id : this.default_zone_type.id
             };
             new_annotations.push(newAnnotation);
         }

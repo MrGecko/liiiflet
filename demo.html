@@ -15,7 +15,7 @@
        <script type="text/javascript">
            const username = "Professeur1";
            const password = "AdeleAdmin2018";
-           const doc_id = 1210;
+           const doc_id = 109;
 
            const manifest_url = `http://localhost:5000/adele/api/1.0/documents/${doc_id}/manifest`;
            const auth_header = {auth: { username: username, password: password}};
@@ -41,7 +41,7 @@
                                return new Promise(resolve => resolve(a));
                            }
                        }
-                       return new Promise(resolve => resolve(response.data[0]));
+                       return new Promise(resolve => resolve(response.data.data[0]));
                    });
                },
                saveAnnotations: function(annotations) {
