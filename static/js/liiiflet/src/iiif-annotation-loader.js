@@ -21,17 +21,18 @@ import axios from 'axios';
 const IIIFAnnotationLoader = {
     options: {},
 
-    initialize: function (canvas, annotations_loader) {
+    initialize: function (canvas, annotations_loader, annotation_id_retriever) {
         //this.options = Object.assign(this.options, options);
         this.annotationLists = {};
+
         this.annotations_loader = annotations_loader;
+        this.annotation_id_retriever = annotation_id_retriever;
 
         // get annotation lists urls
         let axiosPromises = [];
         if (canvas.otherContent) {
             for (let oc of canvas.otherContent) {
                 if (oc["@type"] === "sc:AnnotationList") {
-
                     axiosPromises.push(
                         this.loadAnnotationList(oc["@id"])
                     );
@@ -91,9 +92,8 @@ const IIIFAnnotationLoader = {
             };
             //get the textual content
 
-            let zone_id = annotation.resource["@id"].split("/");
-            zone_id = zone_id[zone_id.length - 3];  //TODO: externaliser ce choix d'id
-            console.log("zone_id:", zone_id);
+            let zone_id = this.annotation_id_retriever(annotation);
+            //console.log("zone_id:", zone_id);
 
             if (annotation.resource["@type"] === "cnt:ContentAsText") {
                 new_annotation = Object.assign(new_annotation, {

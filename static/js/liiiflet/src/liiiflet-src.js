@@ -140,7 +140,12 @@ class LiiifletSrc {
 
         this.clearAnnotations();
 
-        this.annotationsLoader = IIIFAnnotationLoader.initialize(this.canvases_data[this.current_canvas_idx], this.callbacks.loadAnnotations);
+        this.annotationsLoader = IIIFAnnotationLoader.initialize(
+            this.canvases_data[this.current_canvas_idx],
+            this.callbacks.loadAnnotations,
+            this.callbacks.getAnnotationId
+        );
+
         LeafletIIIFAnnotation.initialize(this.map, this.editableLayers, this.default_zone_type, this.tooltipOptions);
 
         return this.setDisplayMode();
@@ -429,7 +434,8 @@ class LiiifletSrc {
                         _this.clearAnnotations();
                         _this.annotationsLoader = IIIFAnnotationLoader.initialize(
                             _this.canvases_data[_this.current_canvas_idx],
-                            _this.callbacks.loadAnnotations
+                            _this.callbacks.loadAnnotations,
+                            _this.callbacks.getAnnotationId
                         );
                         LeafletIIIFAnnotation.initialize(_this.map, _this.editableLayers, _this.default_zone_type, _this.tooltipOptions);
                         _this.setAnnotations().then(function(){
