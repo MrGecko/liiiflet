@@ -28,11 +28,6 @@ class LiiifletSrc {
 
         this.editableLayers = new L.FeatureGroup();
 
-        if (!this.callbacks.loadManifest || !this.callbacks.loadDefaultAnnotationType) {
-            console.log("Liiiflet callbacks are improperly configured");
-            return;
-        }
-
         // load the data
         this.callbacks.loadDefaultAnnotationType().then((response) => {
             this.default_zone_type = response;
@@ -419,7 +414,8 @@ class LiiifletSrc {
                     svg = L.DomUtil.create('a', '', link);
 
                 link.href = '#';
-                link.title = 'Annuler les changements apportés à la page en cours';
+                link.title = 'Recharger la page en cours';
+                link.id  = "reload-link";
 
                 L.DomUtil.addClass(svg, 'fas fa-undo fa-lg workflow-tool');
                 L.DomEvent
@@ -501,7 +497,7 @@ class LiiifletSrc {
 
         const new_annotations = [];
         for (let anno of annotations) {
-            console.log(anno);
+            //console.log(anno);
             /*
             console.log(this.images);
             console.log(this.canvases);
@@ -512,7 +508,8 @@ class LiiifletSrc {
                 canvas_name: canvas_name,
                 coords: anno.region.coords,
                 content: anno.content ? anno.content : "",
-                zone_type_id:  anno.annotation_type ? anno.annotation_type.id : this.default_zone_type.id
+                zone_type_id:  anno.annotation_type ? anno.annotation_type.id : this.default_zone_type.id,
+                zone_id: anno.zone_id
             };
             new_annotations.push(newAnnotation);
         }
@@ -531,39 +528,6 @@ class LiiifletSrc {
 
         return this.callbacks.saveAnnotationAlignments(annotations);
     }
-    /*
-        let doc_id = 1;
-        let user_id = 1;
-        // TODO
-            return axios.delete(`/adele/api/1.0/documents/${doc_id}/transcriptions/alignments/images/from-user/${user_id}`,
-                this.auth_header)
-                .then((response) => {
-                    this.handleAPIErrors(response);
-                    let data = {
-                        username: "AdminJulien",
-                        img_idx: 0,
-                        canvas_idx: 0,
-                        alignments: [
-                            {
-                                "zone_id": 15,
-                                "ptr_start": 1,
-                                "ptr_end": 89
-                            },
-                            {
-                                "zone_id": 26,
-                                "ptr_start": 90,
-                                "ptr_end": 220
-                            }
-                        ]
-                    };
-                    for (let anno of annotations) {
-                        // TODO : get alignments ptrs
-                    }
-                    return axios.post(`/adele/api/1.0/documents/${doc_id}/transcriptions/alignments/images`, {"data": data},
-                        this.auth_header
-                    );
-                });
-    */
 
     getCurrentCanevasId() {
         return this.canvases[this.current_canvas_idx];
@@ -583,13 +547,12 @@ class LiiifletSrc {
 
         return this.saveZones(annotations)
             .then((response) => {
-                console.log(response);
                 this.handleAPIErrors(response);
                 return this.saveAlignments( annotations)
             })
             .then((response) => {
-                console.log(response);
                 this.handleAPIErrors(response);
+                //document.getElementById("reload-link").click();
                 return true
             });
     }
@@ -641,6 +604,9 @@ class LiiifletSrc {
         if (this.enable_edition) {
             if (this.erasing) {
                 this.editableLayers.removeLayer(shape);
+                if (shape.zone_id) {
+                    this.callbacks.onDeleteAnnotation(shape.zone_id);
+                }
                 this.must_be_saved = true;
             } else {
                 if (this.showing) {

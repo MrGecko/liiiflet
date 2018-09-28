@@ -45,10 +45,15 @@
                    });
                },
                saveAnnotations: function(canvas_name, annotations) {
+                   console.log(annotations);
+
                    return  axios.post(
                        `http://localhost:5000/adele/api/1.0/documents/${doc_id}/annotations/${canvas_name}`,
                        {"data": annotations},  auth_header
                    )
+               },
+               onDeleteAnnotation: function(zone_id) {
+                   console.log("propagate deletion of image zone: ", zone_id);
                },
                saveAnnotationAlignments: function(annotations) {
                    //TODO

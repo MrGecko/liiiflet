@@ -84,16 +84,22 @@ const IIIFAnnotationLoader = {
     ,
     parseAnnotation: function (annotation) {
         //console.log("Adding resource " + annotation.resource["@id"]);
-        let new_annotation = null
+        let new_annotation = null;
         if (annotation["@type"] === "oa:Annotation" && annotation["motivation"] === "sc:painting") {
             new_annotation = {
                 "id": annotation.resource["@id"]
             };
             //get the textual content
+
+            let zone_id = annotation.resource["@id"].split("/");
+            zone_id = zone_id[zone_id.length - 3];  //TODO: externaliser ce choix d'id
+            console.log("zone_id:", zone_id);
+
             if (annotation.resource["@type"] === "cnt:ContentAsText") {
                 new_annotation = Object.assign(new_annotation, {
                     content: annotation.resource.chars,
-                    format: annotation.resource.format
+                    format: annotation.resource.format,
+                    zone_id: zone_id
                 });
             }
             /*

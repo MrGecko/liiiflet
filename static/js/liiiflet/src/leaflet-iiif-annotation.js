@@ -47,7 +47,8 @@ const LeafletIIIFAnnotation = {
             content: layer.content,
             annotation_type: layer.annotation_type,
             canvas_id : layer.canvas_id,
-            img_id : layer.img_id
+            img_id : layer.img_id,
+            zone_id: layer.zone_id
         };
     },
 
@@ -57,6 +58,7 @@ const LeafletIIIFAnnotation = {
         * */
         this.annotations = [];
         const _this = this;
+
         this.featureGroup.eachLayer(function (layer) {
             if (!layer.canvas_id)
                 layer.canvas_id = canevas_id;
@@ -77,8 +79,8 @@ const LeafletIIIFAnnotation = {
             let's draw the regions
          */
         console.log(this.featureGroup.getLayers().length);
-        console.log(annotationLists);
-        console.log(this.annotationTypes);
+        //console.log(annotationLists);
+        //console.log(this.annotationTypes);
         for (let listId in annotationLists) {
             if (annotationLists[listId].annotations.length > 0) {
                 this.annotationTypes[annotationLists[listId].annotation_type.label] = annotationLists[listId].annotation_type;
@@ -105,6 +107,7 @@ const LeafletIIIFAnnotation = {
                     //add the shape & the content to the map
                     shape.canvas_id = annotation.canvas_id;
                     shape.img_id = annotation.img_id;
+                    shape.zone_id = annotation.zone_id;
                     shape.content = annotation.content;
                     if (annotation.content && annotation.content.length > 0) {
                         shape.bindTooltip(annotation.content, this.toolTipOptions);
