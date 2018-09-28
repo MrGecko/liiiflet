@@ -166,6 +166,9 @@ class LiiifletSrc {
         const _this = this;
         function goToPage(data) {
             if (data.target.tagName === "IMG") {
+                // before moving, save the current page if needed
+                document.getElementById("save-link").click();
+
                 const thumbnail = data.target.parentNode;
                 const num_page = parseInt(thumbnail.getElementsByTagName('input')[0].value);
                 // display the clicked page
@@ -385,7 +388,8 @@ class LiiifletSrc {
                     svg = L.DomUtil.create('a', '', link);
 
                 link.href = '#';
-                link.title = 'Sauvegarder';
+                link.title = 'Sauvegarder les zones de la page en cours';
+                link.id="save-link";
 
                 L.DomUtil.addClass(svg, 'fas fa-save fa-lg workflow-tool');
                 L.DomEvent.on(link, 'click', L.DomEvent.stop)
@@ -415,7 +419,7 @@ class LiiifletSrc {
                     svg = L.DomUtil.create('a', '', link);
 
                 link.href = '#';
-                link.title = 'Annuler les changements apportés';
+                link.title = 'Annuler les changements apportés à la page en cours';
 
                 L.DomUtil.addClass(svg, 'fas fa-undo fa-lg workflow-tool');
                 L.DomEvent
@@ -478,6 +482,11 @@ class LiiifletSrc {
     }
 
     saveZones(annotations) {
+        /*
+        *
+        * Save all image zones for the current canvas
+        *
+        * */
         if (!this.enable_edition) {
             return;
         }
@@ -486,24 +495,29 @@ class LiiifletSrc {
             return;
         }
 
+        const canvas_id = this.canvases[this.current_canvas_idx];
+        let canvas_name = canvas_id.split("/");
+        canvas_name = canvas_name[canvas_name.length-1];
+
         const new_annotations = [];
         for (let anno of annotations) {
-
             console.log(anno);
             /*
             console.log(this.images);
             console.log(this.canvases);
             */
             const newAnnotation = {
-                img_idx: this.current_img_idx,//this.images.indexOf(anno.img_id),
-                canvas_idx: this.current_canvas_idx,//this.canvases.indexOf(anno.canvas_id),
+                //img_idx: this.current_img_idx,//this.images.indexOf(anno.img_id),
+                //canvas_idx: this.current_canvas_idx,//this.canvases.indexOf(anno.canvas_id),
+                canvas_name: canvas_name,
                 coords: anno.region.coords,
                 content: anno.content ? anno.content : "",
                 zone_type_id:  anno.annotation_type ? anno.annotation_type.id : this.default_zone_type.id
             };
             new_annotations.push(newAnnotation);
         }
-        return this.callbacks.saveAnnotations(new_annotations);
+
+        return this.callbacks.saveAnnotations(canvas_name, new_annotations);
     }
 
     saveAlignments(annotations) {

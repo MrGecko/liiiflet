@@ -37,19 +37,18 @@
                        // unbox the JSONAPI format & find the "annotation" type
                        // (== not the transcription zone type but the free annotations)
                        for (let a of response.data.data) {
-                           if (a.label === "annotation") {
+                           if (a.label === "transcription") {
                                return new Promise(resolve => resolve(a));
                            }
                        }
                        return new Promise(resolve => resolve(response.data.data[0]));
                    });
                },
-               saveAnnotations: function(annotations) {
-                   return axios.post(
-                          `http://localhost:5000/adele/api/1.0/documents/${doc_id}/annotations`,
-                          {"data": annotations},
-                          auth_header
-                      );
+               saveAnnotations: function(canvas_name, annotations) {
+                   return  axios.post(
+                       `http://localhost:5000/adele/api/1.0/documents/${doc_id}/annotations/${canvas_name}`,
+                       {"data": annotations},  auth_header
+                   )
                },
                saveAnnotationAlignments: function(annotations) {
                    //TODO
