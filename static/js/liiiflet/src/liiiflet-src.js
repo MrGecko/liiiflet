@@ -169,7 +169,7 @@ class LiiifletSrc {
         function goToPage(data) {
             if (data.target.tagName === "IMG") {
                 // before moving, save the current page if needed
-                if (this.enable_edition) {
+                if (_this.enable_edition) {
                     document.getElementById("save-link").click();
                 }
 
@@ -203,7 +203,7 @@ class LiiifletSrc {
             /*
             datas:
                 {
-                    'foo': 'bar',
+                    'foo': 'bar',²
                 },
             */
             events:
