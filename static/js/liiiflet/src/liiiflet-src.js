@@ -13,7 +13,7 @@ import "../scss/main.scss";
 
 class LiiifletSrc {
 
-    constructor(map_id, callbacks, tooltipOptions, enable_edition = false) {
+    constructor(map_id, callbacks, tooltipOptions, enable_edition = false, map_options = {}) {
 
         this.callbacks = callbacks;
         this.map_id = map_id;
@@ -23,6 +23,7 @@ class LiiifletSrc {
         this.enable_edition = enable_edition;
         this.erasing = false;
         this.showing = false;
+        this.map_options = map_options;
 
         this.tooltipOptions = tooltipOptions;
 
@@ -76,7 +77,8 @@ class LiiifletSrc {
             zoom: 0,
             //attributionControl: false,
             zoomControl: false,
-            editable: this.enable_edition
+            editable: this.enable_edition,
+            ...this.map_options
         });
         this.map.doubleClickZoom.disable();
 
@@ -167,7 +169,9 @@ class LiiifletSrc {
         function goToPage(data) {
             if (data.target.tagName === "IMG") {
                 // before moving, save the current page if needed
-                document.getElementById("save-link").click();
+                if (this.enable_edition) {
+                    document.getElementById("save-link").click();
+                }
 
                 const thumbnail = data.target.parentNode;
                 const num_page = parseInt(thumbnail.getElementsByTagName('input')[0].value);
