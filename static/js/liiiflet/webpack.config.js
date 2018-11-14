@@ -58,7 +58,7 @@ module.exports = {
         overlay: true,
         proxy: {
             '/': {
-                target: 'http://localhost:5999',
+                target: 'http://localhost:5000',
                 publicPath: '/static/js/liiiflet/',
                 changeOrigin: true
             }

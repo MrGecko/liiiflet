@@ -12,6 +12,8 @@
    </head>
    <body>
        <div id="liiiflet-map" style="width: 825px; height:720px; margin: 0 auto;"></div>
+       <input type="button" id="refresher" value="Refresh"/>
+
        <script type="text/javascript">
            const username = "Professeur1";
            const password = "AdeleAdmin2018";
@@ -72,6 +74,9 @@
            true,
            {zoomControl: true});
 
+           document.getElementById("refresher").addEventListener("click", function() {
+               liiiflet.refresh();
+           })
        </script>
    </body>
 </html>

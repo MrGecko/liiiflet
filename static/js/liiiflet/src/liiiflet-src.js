@@ -153,6 +153,10 @@ class LiiifletSrc {
         return this.setDisplayMode();
     }
 
+    refresh() {
+       this.displayMap(this.current_canvas_idx);
+    }
+
     addPaginationControls() {
 
         let thumbnails = '';
