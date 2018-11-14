@@ -69,6 +69,9 @@
                onDeleteAnnotation: function(zone_id) {
                    console.log("propagate deletion of image zone: ", zone_id);
                },
+               onPageChange: function(canvas_idx) {
+                   console.log("page changed to canvas ", canvas_idx);
+               }
            },
            {direction: "center", className: "facsimileToolTip"}, // toolTip Options
            true,

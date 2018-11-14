@@ -157,6 +157,7 @@ class LiiifletSrc {
        this.displayMap(this.current_canvas_idx);
     }
 
+
     addPaginationControls() {
 
         let thumbnails = '';
@@ -190,6 +191,10 @@ class LiiifletSrc {
                 if (_this.enable_edition) {
                     LiiifletSrc.disableErasingMode();
                     LiiifletSrc.unselectDrawingTools();
+                }
+
+                if (_this.callbacks.onPageChange) {
+                    _this.callbacks.onPageChange(_this.current_canvas_idx);
                 }
             }
         }
